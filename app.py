@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 
 st.set_page_config(page_title="Flood Predictor", layout="centered")
-st.title(" Smart Flood Risk Prediction System")
+st.title(" AI-Based Flood Prediction System using
+Environmental Parameters")
 
 
 @st.cache_resource
