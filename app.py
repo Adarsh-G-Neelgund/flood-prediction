@@ -3,8 +3,8 @@ import pickle
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="Flood Predictor", layout="wide")
-st.title(" 🌊AI-Based Flood Prediction System ")
+st.set_page_config(page_title="Flood Predictor", layout="centered")
+st.title(" 🌊Flood Prediction System ")
 
 
 @st.cache_resource
