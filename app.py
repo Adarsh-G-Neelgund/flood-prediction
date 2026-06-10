@@ -5,7 +5,13 @@ import numpy as np
 
 st.set_page_config(page_title="Flood Predictor", layout="centered")
 st.title(" 🌊Flood Prediction System ")
+st.markdown("""
+This interactive web application uses **Machine Learning** to calculate the statistical probability of a flood 
+based on live weather and environmental conditions. 
 
+**How to use:** Move the sliders below to simulate different weather scenarios (like heavy rainfall or changing river levels), 
+and the trained AI model will instantly analyze the parameters to predict the danger level in real-time.
+""")
 
 @st.cache_resource
 def load_pipeline():
