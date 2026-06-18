@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="Flood Predictor", layout="centered") 
+st.set_page_config(page_title="Flood Predictor", layout="wide") 
 st.title(" 🌊Flood Prediction System ")
 st.markdown("""
 This interactive web application uses **Machine Learning** to calculate the statistical probability of a flood 
@@ -55,18 +55,15 @@ if st.button("Predict", type="primary", use_container_width=True):
         'Infrastructure': infrastructure, 'Historical_Floods': historical_floods
     }
     
-   input_df = pd.DataFrame([input_data])
+    input_df = pd.DataFrame([input_data])
     
-    # 1. First, convert categorical variables to dummy/indicator variables
+    # One-hot encode the text categoricals
     input_encoded = pd.get_dummies(input_df)
     
-    # 2. FIX: Ensure all columns from your training data exist in this single row!
-    # This automatically creates any missing columns (like 'Soil_Type_Clay') 
-    # and fills them with a 0 since they aren't chosen in this prediction round.
+    # 💥 THE CRITICAL FIX: Reindex immediately so empty arrays match the original blueprint
     input_final = input_encoded.reindex(columns=dummy_columns, fill_value=0)
     
     # ---- 🏆 Pipeline A: Optimized Model (Logistic Regression) ----
-    # Now that all column shapes align perfectly, your scaler will run without any KeyErrors!
     scaled_data = scaler.transform(input_final)
     selected_data = selector.transform(scaled_data)
     extracted_data = pca.transform(selected_data)
@@ -119,4 +116,12 @@ if st.button("Predict", type="primary", use_container_width=True):
         | *Overall Model Accuracy* | *72.35%* |
         | *Precision Score* | *68.10%* |
         | *Recall (Sensitivity)* | *64.40%* |
+        """)
+
+    st.markdown("---")
+    with st.expander("🔬 Data Science Review: Why does Model A consistently beat Model B?"):
+        st.markdown("""
+        ### 🧬 The Core Architectural Advantages:
+        * **The Independence Assumption Flaw:** Naïve Bayes assumes every single parameter is fully independent. In climate settings, metrics like `River_Discharge_m3_s` and `Water_Level_m` are highly correlated. Model B suffers from data redundancy, while Model A avoids this completely by compressing overlapping variables into independent **PCA components**.
+        * **Scale Discrepancy:** Naïve Bayes operates on unscaled inputs. This means massive numeric properties (like Population Density sitting at 5000) completely overwhelm tiny properties (like binary 0 or 1 infrastructure flags). Model A balances features evenly using **StandardScaler** normalization.
         """)
