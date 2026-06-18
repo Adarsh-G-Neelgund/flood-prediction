@@ -55,11 +55,18 @@ if st.button("Predict", type="primary", use_container_width=True):
         'Infrastructure': infrastructure, 'Historical_Floods': historical_floods
     }
     
-    input_df = pd.DataFrame([input_data])
+   input_df = pd.DataFrame([input_data])
+    
+    # 1. First, convert categorical variables to dummy/indicator variables
     input_encoded = pd.get_dummies(input_df)
+    
+    # 2. FIX: Ensure all columns from your training data exist in this single row!
+    # This automatically creates any missing columns (like 'Soil_Type_Clay') 
+    # and fills them with a 0 since they aren't chosen in this prediction round.
     input_final = input_encoded.reindex(columns=dummy_columns, fill_value=0)
     
     # ---- 🏆 Pipeline A: Optimized Model (Logistic Regression) ----
+    # Now that all column shapes align perfectly, your scaler will run without any KeyErrors!
     scaled_data = scaler.transform(input_final)
     selected_data = selector.transform(scaled_data)
     extracted_data = pca.transform(selected_data)
