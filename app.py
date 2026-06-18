@@ -3,28 +3,43 @@ import pickle
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="Flood Predictor", layout="wide") 
+# =========================================================
+# 📘 1. APP CONFIGURATION & DESCRIPTION
+# =========================================================
+st.set_page_config(page_title="Flood Predictor Pro", layout="wide") 
 st.title(" 🌊Flood Prediction System ")
 st.markdown("""
 This interactive web application uses **Machine Learning** to calculate the statistical probability of a flood 
 based on live weather and environmental conditions. 
 
 **How to use:** Move the sliders below to simulate different weather scenarios (like heavy rainfall or changing river levels), 
-and the trained AI model will instantly analyze the parameters to predict the danger level in real-time.
+and the trained AI models will instantly analyze the parameters to predict the danger level in real-time.
 """)
 
+# =========================================================
+# 📥 2. CACHED MODEL & TRANSFORMER ASSET LOADER
+# =========================================================
 @st.cache_resource
 def load_pipeline():
-    with open('logistic_regression_model.pkl', 'rb') as f: model = pickle.load(f)
-    with open('baseline_model.pkl', 'rb') as f: model_base = pickle.load(f) 
-    with open('scaler.pkl', 'rb') as f: scaler = pickle.load(f)
-    with open('selector.pkl', 'rb') as f: selector = pickle.load(f)
-    with open('pca.pkl', 'rb') as f: pca = pickle.load(f)
-    with open('dummy_columns.pkl', 'rb') as f: dummy_columns = pickle.load(f)
+    with open('logistic_regression_model.pkl', 'rb') as f: 
+        model = pickle.load(f)
+    with open('baseline_model.pkl', 'rb') as f: 
+        model_base = pickle.load(f) 
+    with open('scaler.pkl', 'rb') as f: 
+        scaler = pickle.load(f)
+    with open('selector.pkl', 'rb') as f: 
+        selector = pickle.load(f)
+    with open('pca.pkl', 'rb') as f: 
+        pca = pickle.load(f)
+    with open('dummy_columns.pkl', 'rb') as f: 
+        dummy_columns = pickle.load(f)
     return model, model_base, scaler, selector, pca, dummy_columns
 
 model, model_base, scaler, selector, pca, dummy_columns = load_pipeline()
 
+# =========================================================
+# 🎛️ 3. DASHBOARD SLIDER CONTROL LAYOUT
+# =========================================================
 st.header("Input Parameters")
 col1, col2 = st.columns(2)
 
@@ -45,6 +60,9 @@ with col2:
     infrastructure = st.selectbox("Infrastructure Quality", [0, 1], format_func=lambda x: "Good/Maintained (1)" if x==1 else "Poor/Substandard (0)")
     historical_floods = st.selectbox("Historically Flooded?", [0, 1], format_func=lambda x: "Yes (1)" if x==1 else "No (0)")
 
+# =========================================================
+# 📊 4. INFRASTRUCTURE EVALUATION AND PIPELINE COMPUTATION
+# =========================================================
 if st.button("Predict", type="primary", use_container_width=True):
     
     input_data = {
@@ -57,25 +75,28 @@ if st.button("Predict", type="primary", use_container_width=True):
     
     input_df = pd.DataFrame([input_data])
     
-    # One-hot encode the text categoricals
+    # Generate categorical binary dummy indicators
     input_encoded = pd.get_dummies(input_df)
     
-    # 💥 THE CRITICAL FIX: Reindex immediately so empty arrays match the original blueprint
+    # Sync exact column shapes with original training layout properties 
     input_final = input_encoded.reindex(columns=dummy_columns, fill_value=0)
     
+    # Convert input dataframe container to a raw matrix to prevent scikit-learn name exceptions
+    input_matrix = input_final.values
+    
     # ---- 🏆 Pipeline A: Optimized Model (Logistic Regression) ----
-    scaled_data = scaler.transform(input_final)
+    scaled_data = scaler.transform(input_matrix)
     selected_data = selector.transform(scaled_data)
     extracted_data = pca.transform(selected_data)
     probability_lr = model.predict_proba(extracted_data)[0][1]
     prediction_lr = model.predict(extracted_data)[0]
     
     # ---- 📉 Pipeline B: Baseline Model (Naïve Bayes) ----
-    probability_nb = model_base.predict_proba(input_final)[0][1]
-    prediction_nb = model_base.predict(input_final)[0]
+    probability_nb = model_base.predict_proba(input_matrix)[0][1]
+    prediction_nb = model_base.predict(input_matrix)[0]
     
     # =========================================================
-    # 📈 DASHBOARD RENDERING: MULTI-ALGORITHM SIDE-BY-SIDE
+    # 📈 5. SIDE-BY-SIDE PRESENTATION DASHBOARD
     # =========================================================
     st.markdown("---")
     st.header("📊 Multi-Algorithm Risk Assessment Dashboard")
@@ -88,42 +109,3 @@ if st.button("Predict", type="primary", use_container_width=True):
         
         risk_lr = probability_lr * 100
         if prediction_lr == 1:
-            st.error(f"🚨 **CRITICAL RISK:** Flood predicted! Probability: **{risk_lr:.2f}%**")
-        else:
-            st.success(f"🟢 **LOW RISK:** Area clear. Flood probability: **{risk_lr:.2f}%**")
-            
-        st.markdown("""
-        | Validation Performance Metrics | Score Summary |
-        | :--- | :--- |
-        | **Overall Model Accuracy** | **85.45%** |
-        | **Precision Score** | **85.00%** |
-        | **Recall (Sensitivity)** | **80.00%** |
-        """)
-
-    with col_ui_base:
-        st.subheader("📉 Model B: Naïve Bayes Baseline")
-        st.caption("Standard Classifier Blueprint (Raw Unscaled Fields, No Feature Compressions)")
-        
-        risk_nb = probability_nb * 100
-        
-        # 🛠️ FIX: Using the correct, existing variable name 'prediction_nb' here!
-        if prediction_nb == 1:
-            st.error(f"⚠️ **HAZARD WARNING:** Threat detected! Expected risk score: **{risk_nb:.2f}%**")
-        else:
-            st.success(f"✅ **STABLE AREA:** Low baseline movement. Score: **{risk_nb:.2f}%**")
-            
-        st.markdown("""
-        | Baseline Performance Metrics | Score Summary |
-        | :--- | :--- |
-        | *Overall Model Accuracy* | *72.35%* |
-        | *Precision Score* | *68.10%* |
-        | *Recall (Sensitivity)* | *64.40%* |
-        """)
-
-    st.markdown("---")
-    with st.expander("🔬 Data Science Review: Why does Model A consistently beat Model B?"):
-        st.markdown("""
-        ### 🧬 The Core Architectural Advantages:
-        * **The Independence Assumption Flaw:** Naïve Bayes assumes every single parameter is fully independent. In climate settings, metrics like `River_Discharge_m3_s` and `Water_Level_m` are highly correlated. Model B suffers from data redundancy, while Model A avoids this completely by compressing overlapping variables into independent **PCA components**.
-        * **Scale Discrepancy:** Naïve Bayes operates on unscaled inputs. This means massive numeric properties (like Population Density sitting at 5000) completely overwhelm tiny properties (like binary 0 or 1 infrastructure flags). Model A balances features evenly using **StandardScaler** normalization.
-        """)
