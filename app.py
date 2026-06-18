@@ -105,6 +105,8 @@ if st.button("Predict", type="primary", use_container_width=True):
         st.caption("Standard Classifier Blueprint (Raw Unscaled Fields, No Feature Compressions)")
         
         risk_nb = probability_nb * 100
+        
+        # 🛠️ FIX: Using the correct, existing variable name 'prediction_nb' here!
         if prediction_nb == 1:
             st.error(f"⚠️ **HAZARD WARNING:** Threat detected! Expected risk score: **{risk_nb:.2f}%**")
         else:
