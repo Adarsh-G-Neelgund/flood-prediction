@@ -46,6 +46,8 @@ for col in numerical_features:
 
 X = df.drop('Flood_Occurred', axis=1)
 y = df['Flood_Occurred']
+
+# Create dummy features using the exact format expected by the app pipeline
 X_encoded = pd.get_dummies(X)
 
 # Freeze layout blueprint tracking array
